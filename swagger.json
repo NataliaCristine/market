@@ -1,0 +1,893 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "version": "1.0.0",
+    "title": "Market",
+    "description": "Uma API para compras e cadastramento de produtos"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/user": {
+      "post": {
+        "tags": ["User"],
+        "description": "Rota da criação do usuário",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schema/user" },
+              "examples": {
+                "user": {
+                  "value": {
+                    "name": "usuario",
+                    "email": "usuario@mail.com",
+                    "password": "senha com seis caracteres",
+                    "isAdmin": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "response": {
+          "201": {
+            "description": "Criar Usuário",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schema/user" },
+                "examples": {
+                  "user": {
+                    "value": {
+                      "name": "usuario",
+                      "email": "usuario@mail.com",
+                      "isAdmin": true,
+                      "recoverPass": null,
+                      "uuid": "89c6b374-b122-4ed2-8ded-b9446becc2ce",
+                      "createdOn": "2022-02-08T23:19:30.004Z",
+                      "updatedOn": "2022-02-08T23:19:30.004Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "E-mail que já está registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falha ao criar o usuário",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      },
+      "get": {
+        "tags": ["User"],
+        "description": "Rota para obter todos os usuários, somente administradores logados",
+        "response": {
+          "200": {
+            "description": "Após Administrador passar o token retorna todos os usuarios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": { "type": "string" },
+                    "name": { "type": "string" },
+                    "email": { "type": "string" },
+                    "password": { "type": "string" },
+                    "isAdmin": { "type": "boolean" },
+                    "createdOn": { "type": "string" },
+                    "updateOn": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token ou não for admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/user/{uuids}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "uuids",
+            "in": "path",
+            "required": "true",
+            "description": "uuid do usuário",
+            "schema": { "type": "string" }
+          }
+        ],
+        "tags": ["User"],
+        "description": "Acessar usuário específico sendo permitido apenas para o próprio usuário ou Administrador logados",
+        "responses": {
+          "200": {
+            "description": "Acessar informações do usuário logado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": { "type": "string" },
+                    "name": { "type": "string" },
+                    "email": { "type": "string" },
+                    "password": { "type": "string" },
+                    "isAdmin": { "type": "boolean" },
+                    "createdOn": { "type": "string" },
+                    "updateOn": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token ou não for admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          },
+          "security": [{ "bearerAuth": [] }]
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": ["User"],
+        "description": "Logar o usuário",
+        "requestBody": {
+          "description": "logar o usuário e acessar o token",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "reponse": {
+          "200": {
+            "description": "logado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe as informações corretas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/product": {
+      "post": {
+        "tags": ["Product"],
+        "description": "Cadastra um único produto, apenas para administradores",
+        "requestBody": {
+          "description": "cadastro de um único produto por administradores",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "price": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "reponse": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "price": { "type": "number" },
+                    "uuid": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token ou não seja o Administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Product"],
+        "description": "Rota para obter todos os produtos, somente logados",
+        "response": {
+          "200": {
+            "description": "Após  passar o token retorna todos os produtos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "price": { "type": "number" },
+                    "uuid": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/{uuids}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "uuids",
+            "in": "path",
+            "required": "true",
+            "description": "uuid do produto",
+            "schema": { "type": "string" }
+          }
+        ],
+        "tags": ["Product"],
+        "description": "Acessar produto específico sendo permitido  estando logados",
+        "responses": {
+          "200": {
+            "description": "Acessar informações do produto para usuário logado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "price": { "type": "number" },
+                    "uuid": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cart": {
+      "post": {
+        "tags": ["Cart"],
+        "description": "Cadastra um único produto, no carrinho  para usuários",
+        "requestBody": {
+          "description": "cadastro de um único produto ao carrinho",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_uuid": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "reponse": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": { "type": "string" },
+                    "product": {
+                      "type": "array",
+                      "properties": {
+                        "name": { "type": "string" },
+                        "price": { "type": "number" },
+                        "uuid": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Cart"],
+        "description": "Rota para obter todos os produtos, somente logados",
+        "response": {
+          "200": {
+            "description": "Após  passar o token retorna todos os produtos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": { "type": "string" },
+                    "product": {
+                      "type": "array",
+                      "properties": {
+                        "uuid": { "type": "string" },
+                        "price": { "type": "number" },
+                        "name": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cart/{uuids}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "uuids",
+            "in": "path",
+            "required": "true",
+            "description": "uuid do cart",
+            "schema": { "type": "string" }
+          }
+        ],
+        "tags": ["Cart"],
+        "description": "Acessar carrinho específico sendo permitido para o dono do cart e o administrador estando logado",
+        "responses": {
+          "200": {
+            "description": "Acessar informações do carrinho para usuário logado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": { "type": "string" },
+                    "product": {
+                      "type": "array",
+                      "properties": {
+                        "name": { "type": "string" },
+                        "price": { "type": "number" },
+                        "uuid": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "uuids",
+            "in": "path",
+            "required": "true",
+            "description": "uuid do produto",
+            "schema": { "type": "string" }
+          }
+        ],
+        "tags": ["Cart"],
+        "description": "Deleta um produto específico sendo permitido para o dono do cart  logado",
+        "responses": {
+          "204": {
+            "description": "Deleta produto do carrinho para usuário logado",
+            "content": {}
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buy": {
+      "post": {
+        "tags": ["Buy"],
+        "description": "Está rota não possui requisição é necessário passar o token para finalizar a compra dos produtos e esvaziar o carrinho. Apenas o próprio usuário pode finalizar suas compras.",
+
+        "reponse": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "uuid": { "type": "string" },
+                        "name": { "type": "string" },
+                        "email": { "type": "string" },
+                        "password": { "type": "string" },
+                        "isAdmin": { "type": "boolean" },
+                        "createdOn": { "type": "string" },
+                        "updateOn": { "type": "string" }
+                      }
+                    },
+                    "product": {
+                      "type": "array",
+                      "properties": {
+                        "name": { "type": "string" },
+                        "price": { "type": "number" },
+                        "uuid": { "type": "string" }
+                      }
+                    },
+                    "uuid": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Buy"],
+        "description": "Rota para obter todos os produtos comprados, somente  administradores logados",
+        "response": {
+          "200": {
+            "description": "Após  passar o token retorna todos os produtos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "uuid": { "type": "string" },
+                        "name": { "type": "string" },
+                        "email": { "type": "string" },
+                        "password": { "type": "string" },
+                        "isAdmin": { "type": "boolean" },
+                        "createdOn": { "type": "string" },
+                        "updateOn": { "type": "string" }
+                      }
+                    },
+                    "product": {
+                      "type": "array",
+                      "properties": {
+                        "name": { "type": "string" },
+                        "price": { "type": "number" },
+                        "uuid": { "type": "string" }
+                      }
+                    },
+                    "uuid": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "buy/{uuids}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "uuids",
+            "in": "path",
+            "required": "true",
+            "description": "uuid do buy",
+            "schema": { "type": "string" }
+          }
+        ],
+        "tags": ["Buy"],
+        "description": "Acessar uma compra específica sendo permitido para o dono  e o administrador estando logado",
+        "responses": {
+          "200": {
+            "description": "Acessar informações da compra apenas logado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "uuid": { "type": "string" },
+                        "name": { "type": "string" },
+                        "email": { "type": "string" },
+                        "password": { "type": "string" },
+                        "isAdmin": { "type": "boolean" },
+                        "createdOn": { "type": "string" },
+                        "updateOn": { "type": "string" }
+                      }
+                    },
+                    "product": {
+                      "type": "array",
+                      "properties": {
+                        "name": { "type": "string" },
+                        "price": { "type": "number" },
+                        "uuid": { "type": "string" }
+                      }
+                    },
+                    "uuid": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recuperar": {
+      "post": {
+        "tags": ["Recover Password"],
+        "description": "Rota de recuperar a senha do usuário",
+        "requestBody": {
+          "description": "Usuário recebe um codigo por email",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "reponse": {
+          "200": {
+            "description": "Após a requisição",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Caso não passe as chaves corretas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": "string",
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/alterar_senha": {
+      "post": {
+        "tags": ["Change Password"],
+        "description": "Rota de alteração a senha do usuário",
+        "requestBody": {
+          "description": "Usuário utiliza o codigo do email e atualiza a senha",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "codigo": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "reponse": {
+          "200": {
+            "description": "Após a requisição",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": { "type": "string" },
+                    "name": { "type": "string" },
+                    "email": { "type": "string" },
+                    "password": { "type": "string" },
+                    "isAdmin": { "type": "boolean" },
+                    "createdOn": { "type": "string" },
+                    "updateOn": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Caso não passe as chaves corretas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": "string",
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [{}]
+      }
+    },
+    "/email": {
+      "post": {
+        "tags": ["Email"],
+        "description": "Rota para enviar email, apenas administradores",
+        "requestBody": {
+          "description": "Administrador envia um email",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "subject": { "type": "string" },
+                  "mensagem": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "reponse": {
+          "200": {
+            "description": "Após a requisição",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caso não passe o token ou não seja admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Caso não passe as chaves corretas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": "string",
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "components": {
+    "schema": {
+      "user": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "isAdmin": { "type": "boolean" },
+          "recoverPass": {
+            "type": "string",
+            "description": "generate with uuid v4",
+            "readOnly": true
+          },
+          "uuid": {
+            "type": "string",
+            "description": "generate with uuid v4",
+            "readOnly": true
+          },
+          "password": { "type": "string", "writeOnly": true },
+          "createdOn": {
+            "type": "string",
+            "description": "generate automatic ",
+            "readOnly": true
+          },
+          "updatedOn": {
+            "type": "string",
+            "description": "generate automatic ",
+            "readOnly": true
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

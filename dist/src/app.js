@@ -1,0 +1,23 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+require("reflect-metadata");
+const express_1 = __importDefault(require("express"));
+const database_1 = require("./database");
+const router_1 = require("./router");
+const error_middleware_1 = require("./middlewares/error.middleware");
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const swagger_json_1 = __importDefault(require("../swagger.json"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+console.log(process.env.USER_MAIL);
+console.log("proximo");
+(0, database_1.connectDatabase)();
+const app = (0, express_1.default)();
+app.use(express_1.default.json());
+app.use("/api-documentation", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_json_1.default));
+(0, router_1.initRouter)(app);
+app.use(error_middleware_1.errorHandler);
+exports.default = app;

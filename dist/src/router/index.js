@@ -1,0 +1,22 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initRouter = void 0;
+const user_router_1 = require("./user.router");
+const login_router_1 = require("./login.router");
+const product_router_1 = require("./product.router");
+const cart_router_1 = require("./cart.router");
+const buy_route_1 = require("./buy.route");
+const email_route_1 = require("./email.route");
+const recupPass_route_1 = require("./recupPass.route");
+const updatePass_route_1 = require("./updatePass.route");
+const initRouter = (app) => {
+    app.use("/user", (0, user_router_1.userRouter)());
+    app.use("/login", (0, login_router_1.loginRouter)());
+    app.use("/product", (0, product_router_1.productRouter)());
+    app.use("/cart", (0, cart_router_1.cartRouter)());
+    app.use("/buy", (0, buy_route_1.buyRouter)());
+    app.use("/email", (0, email_route_1.emailRouter)());
+    app.use("/recuperar", (0, recupPass_route_1.recupPassRouter)());
+    app.use("/alterar_senha", (0, updatePass_route_1.updatePassRouter)());
+};
+exports.initRouter = initRouter;

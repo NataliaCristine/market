@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Olá! Tudo bem?</title>
+  </head>
+  <body>
+    <h2> {{titleEmail}}! </h2>
+    <ul>
+      {{#each corpo}}
+        <li> {{this.name}} - R$ {{this.price}}</li>
+      {{/each}}
+    </ul>
+  </body>
+</html>
